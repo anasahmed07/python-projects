@@ -2,6 +2,10 @@
 
 This project is a Password Strength Checker built using Python and Streamlit. It evaluates the strength of a password based on various criteria such as length, inclusion of uppercase and lowercase letters, digits, and special characters. Additionally, it suggests ways to improve the password strength and provides an option to generate a strong password.
 
+### Deployment
+This application is deployed on Streamlit. You can access it [here](https://anas-password-checker.streamlit.app).
+
+
 ## Features
 - Checks the strength of a password and provides a score out of 5.
 - Gives suggestions to improve the password strength.
