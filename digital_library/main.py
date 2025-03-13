@@ -13,8 +13,26 @@ st.set_page_config(
     page_icon="📚"
 )
 
-with open("style.css") as f:
-    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+st.markdown("""
+    <style>
+        .stButton button {
+            width: 100%;
+        }
+        .metrics-container {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+        .book-status-available {
+            color: green;
+            font-weight: bold;
+        }
+        .book-status-issued {
+            color: red;
+            font-weight: bold;
+        }
+    </style>""", 
+    unsafe_allow_html=True)
 
 
 def connect_to_database():
