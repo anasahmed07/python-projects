@@ -73,6 +73,8 @@ def home_page(db):
                 with st.expander(f"{book['bookName']}"):
                     st.write(f"🖊️ Author: {book['authorName']}")
                     st.write(f"📑 ISBN: {book['isbn']}")
+                    st.write(f"📚 Genre: {book['genre']}")
+                    st.write(f"📅 Published: {book['publication_year']}")
                     status_color = "green" if book['availability'] == "Available" else "red"
                     st.markdown(f"Status: <span style='color:{status_color}'>{book['availability']}</span>", 
                               unsafe_allow_html=True)
@@ -97,6 +99,15 @@ def add_book(db):
         bookName = st.text_input("Book Name")
         authorName = st.text_input("Author Name")
         isbn = st.text_input("ISBN")
+        genre = st.selectbox("Genre", [
+            "Fiction", "Non-Fiction", "Science Fiction", "Mystery", 
+            "Romance", "Fantasy", "Biography", "History", "Science", 
+            "Technology", "Other"
+        ])
+        publication_year = st.number_input("Publication Year", 
+            min_value=1800, 
+            max_value=date.today().year,
+            value=date.today().year)
         cover_image = st.file_uploader("Upload Book Cover", type=['jpg', 'jpeg', 'png'])
         
         submitted = st.form_submit_button("Add Book")
@@ -111,17 +122,12 @@ def add_book(db):
             else:
                 image_data = None
                 if cover_image is not None:
-                    # Open the image using PIL
                     img = Image.open(cover_image)
-                    
-                    # Resize image to a reasonable size (e.g., max 800px width)
                     max_width = 800
                     if img.size[0] > max_width:
                         ratio = max_width / img.size[0]
                         new_size = (max_width, int(img.size[1] * ratio))
                         img = img.resize(new_size)
-                    
-                    # Convert image to base64
                     buffered = BytesIO()
                     img.save(buffered, format="JPEG")
                     image_data = base64.b64encode(buffered.getvalue()).decode()
@@ -130,6 +136,8 @@ def add_book(db):
                     "bookName": bookName,
                     "authorName": authorName,
                     "isbn": isbn,
+                    "genre": genre,  # Add genre
+                    "publication_year": publication_year,  # Add publication year
                     "availability": "Available",
                     "cover_image": image_data,
                     "dateAdded": date.today().isoformat()
@@ -138,15 +146,19 @@ def add_book(db):
                 db.books.insert_one(book_doc)
                 st.success("Book added successfully!")
 
+
 def view_books(db):
     st.header("Books in Library")
     
-
-    col1, col2 = st.columns([2, 1])
+    col1, col2, col3 = st.columns([2, 1, 1])
     with col1:
         search = st.text_input("🔍 Search by book name or author")
     with col2:
         status_filter = st.selectbox("Filter by status", ["All", "Available", "Issued"])
+    with col3:
+        genre_filter = st.selectbox("Filter by genre", ["All", "Fiction", "Non-Fiction", 
+            "Science Fiction", "Mystery", "Romance", "Fantasy", "Biography", 
+            "History", "Science", "Technology", "Other"])
     
     query = {}
     if search:
@@ -156,6 +168,8 @@ def view_books(db):
         ]
     if status_filter != "All":
         query["availability"] = status_filter
+    if genre_filter != "All":
+        query["genre"] = genre_filter
     
     books = list(db.books.find(query))
     if not books:
@@ -176,6 +190,8 @@ def view_books(db):
                     
                     st.write(f"Author: {book['authorName']}")
                     st.write(f"ISBN: {book['isbn']}")
+                    st.write(f"Genre: {book['genre']}")
+                    st.write(f"Publication Year: {book['publication_year']}")
                     status_color = "green" if book['availability'] == "Available" else "red"
                     st.markdown(
                         f"Status: <span style='color:{status_color}'>{book['availability']}</span>", 
@@ -213,6 +229,8 @@ def issue_book(db):
         with col2:
             st.write(f"**Author:** {book['authorName']}")
             st.write(f"**ISBN:** {book['isbn']}")
+            st.write(f"**Genre:** {book['genre']}")
+            st.write(f"**Publication Year:** {book['publication_year']}")
         
         with st.form("issue_book_form"):
             st.markdown("### Borrower Details")
@@ -240,6 +258,8 @@ def issue_book(db):
                             "bookName": book["bookName"],
                             "authorName": book["authorName"],
                             "isbn": isbn,
+                            "genre": book.get("genre", "Not specified"),  # Add genre
+                            "publication_year": book.get("publication_year", "Not specified"),  # Add publication year
                             "name": name,
                             "email": email,
                             "phone": phone,
@@ -299,6 +319,8 @@ def view_issued_books(db):
             with st.expander(f"{book['bookName']} - {book['isbn']}"):
                 st.write(f"Author: {book['authorName']}")
                 st.write(f"ISBN: {book['isbn']}")
+                st.write(f"Genre: {book.get('genre', 'Not specified')}")
+                st.write(f"Publication Year: {book.get('publication_year', 'Not specified')}")
                 st.write(f"Borrowed by: {book['name']}")
                 st.write(f"Contact: {book['phone']}")
                 st.write(f"Issue Date: {book['dateIssued']}")
@@ -316,7 +338,7 @@ def delete_book(db):
             
             if book.get("availability") == "Issued":
                 st.error("Cannot delete: Book is currently issued")
-            elif st.button("Confirm Delete"):
+            elif st.button("Confirm Delete",disabled=True):
                 db.books.delete_one({"isbn": isbn})
                 st.success("Book deleted successfully!")
         else:
