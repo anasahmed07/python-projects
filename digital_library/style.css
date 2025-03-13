@@ -1,0 +1,16 @@
+.stButton button {
+    width: 100%;
+}
+.metrics-container {
+    display: flex;
+    justify-content: space-around;
+    margin: 20px 0;
+}
+.book-status-available {
+    color: green;
+    font-weight: bold;
+}
+.book-status-issued {
+    color: red;
+    font-weight: bold;
+}
